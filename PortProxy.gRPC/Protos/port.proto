@@ -1,0 +1,34 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "PortProxy.gRPC";
+
+package port;
+
+// The greeting service definition.
+service PortMapper {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (Reply);
+
+  rpc AddPort(PortRequest) returns (Reply);
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings.
+message Reply {
+  string message = 1;
+}
+
+/////
+///
+message PortRequest
+{
+	string name = 1;
+	string local_port = 2;
+	string protocol = 3;
+	string  forward_ip = 4;
+	string  forward_port = 5;
+}
