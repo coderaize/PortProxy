@@ -5,6 +5,13 @@
     "forwardIp": "35.187.92.120",
     "forwardPort": 7777
   },
+
+  "rdp": {
+    "localPort": 7779,
+    "protocol": "any",
+    "forwardIp": "192.168.8.111",
+    "forwardPort": 3389
+  },
   "http": {
     "localPort": 80,
     "protocol": "tcp",

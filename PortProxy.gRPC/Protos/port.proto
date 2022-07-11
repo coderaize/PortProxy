@@ -1,11 +1,11 @@
 ﻿syntax = "proto3";
 
-option csharp_namespace = "PortProxy.gRPC";
+option csharp_namespace = "PortProxy.Connector";
 
 package port;
 
 // The greeting service definition.
-service PortMapper {
+service PPConnector {
   // Sends a greeting
   rpc SayHello (HelloRequest) returns (Reply);
 

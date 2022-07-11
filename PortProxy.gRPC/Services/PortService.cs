@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Grpc.Core;
 
-namespace PortProxy.gRPC.Services
+namespace PortProxy.Connector.Services
 {
-    public class PortService : PortMapper.PortMapperBase
+    public class PortService : PPConnector.PPConnectorBase
     {
         private readonly ILogger<PortService> _logger;
         public PortService(ILogger<PortService> logger)
@@ -19,7 +19,6 @@ namespace PortProxy.gRPC.Services
 
         public override Task<Reply> AddPort(PortRequest request, ServerCallContext context)
         {
-
             //////
             // perform task here
             //////

@@ -3,6 +3,8 @@
     "PortProxy.WinService": {
       "commandName": "Project",
       "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5063;https://localhost:7063",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
       }

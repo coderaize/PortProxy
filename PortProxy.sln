@@ -5,9 +5,11 @@ VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortProxy", "PortProxy\PortProxy.csproj", "{4ED9CFDA-CFC2-4D8D-963C-6ECB938604A2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortProxy.gRPC", "PortProxy.gRPC\PortProxy.gRPC.csproj", "{E7D9B60D-3F4F-4B45-AB4F-ADC65D05FC04}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortProxy.Connector", "PortProxy.gRPC\PortProxy.Connector.csproj", "{E7D9B60D-3F4F-4B45-AB4F-ADC65D05FC04}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortProxy.Service", "PortProxy.Service\PortProxy.Service.csproj", "{86313B5F-17CD-4244-83DC-95ECCB6E27E4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortProxy.App", "PortProxy.App\PortProxy.App.csproj", "{4B3375D4-CBA9-48D7-9954-739A55762400}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortProxy.WinService", "PortProxy.WinService\PortProxy.WinService.csproj", "{0EFB13A7-384A-4878-8571-0F9BDFC39E04}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +25,14 @@ Global
 		{E7D9B60D-3F4F-4B45-AB4F-ADC65D05FC04}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7D9B60D-3F4F-4B45-AB4F-ADC65D05FC04}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7D9B60D-3F4F-4B45-AB4F-ADC65D05FC04}.Release|Any CPU.Build.0 = Release|Any CPU
-		{86313B5F-17CD-4244-83DC-95ECCB6E27E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{86313B5F-17CD-4244-83DC-95ECCB6E27E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{86313B5F-17CD-4244-83DC-95ECCB6E27E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{86313B5F-17CD-4244-83DC-95ECCB6E27E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B3375D4-CBA9-48D7-9954-739A55762400}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B3375D4-CBA9-48D7-9954-739A55762400}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B3375D4-CBA9-48D7-9954-739A55762400}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B3375D4-CBA9-48D7-9954-739A55762400}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EFB13A7-384A-4878-8571-0F9BDFC39E04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EFB13A7-384A-4878-8571-0F9BDFC39E04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EFB13A7-384A-4878-8571-0F9BDFC39E04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EFB13A7-384A-4878-8571-0F9BDFC39E04}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
