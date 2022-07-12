@@ -11,7 +11,4 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\PortProxy\PortProxy.csproj" />
 	</ItemGroup>
-	<ItemGroup>
-		<Protobuf Include="Protos\port.proto" GrpcServices="Both" />
-	</ItemGroup>
 </Project>

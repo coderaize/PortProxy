@@ -15,4 +15,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Protobuf Include="Connector\Protos\port.proto" GrpcServices="Both" />
+  </ItemGroup>
+
 </Project>
