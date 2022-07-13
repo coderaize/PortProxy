@@ -25,8 +25,7 @@ namespace PortProxy.WinService
                                        options.ListenAnyIP(0, listenOptions =>
                                        {
                                            listenOptions.Protocols = HttpProtocols.Http2;
-                                           
-                                       });                                       
+                                       });
                                    })
                                    .UseKestrel()
                                    .UseStartup<GrpcServerStartup>();
@@ -34,24 +33,33 @@ namespace PortProxy.WinService
                            .Build()
                            .StartAsync(stoppingToken);
             /////
-            var mp = PortProxy.ConfigHandler.GetMappedProxies;
-            if (mp != null)
-                foreach (string proxyName in mp.Keys)
-                {
-                    var proxyConfig = mp[proxyName];
-                    var pT = PortProxy.ProxyThreads.ProxyThread(proxyName, proxyConfig);
-                    pT.Start();
-                }
+            var c = Cache.Configs;
+            foreach (string k in c.Keys)
+            {
+                ProxyThread proxyThread = new ProxyThread(k, c[k]);
+                proxyThread.StartProxy();
+                Cache.ActiveSession.Add(new ActiveSession(k, c[k], new List<string>(), new List<string>(), proxyThread));
+            }
 
-           
-
+            int i = 0;
             while (!stoppingToken.IsCancellationRequested)
             {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                await Task.Delay(10000, stoppingToken);
-                
+                i++;
+                //_logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                await Task.Delay(1000, stoppingToken);
+
+                if (i % 60 == 0)
+                {
+                    Console.WriteLine($"Active Sesison {DateTime.Now}");
+                    Cache.ActiveSession.ForEach(X =>
+                    {
+                        Console.WriteLine($"{X.ProxyName}  Tcp:{string.Join(',', X.TcpClients.ToArray())}  Udp:{string.Join(',', X.UdpClients.ToArray())}");
+                    });
+                }
             }
         }
+
+
 
     }
 }

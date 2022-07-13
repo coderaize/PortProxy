@@ -15,7 +15,14 @@ namespace PortProxy
         /// </summary>
         public int ConnectionTimeout { get; set; } = (4 * 60 * 1000);
 
-        public async Task Start(string remoteServerHostNameOrAddress, ushort remoteServerPort, ushort localPort, string? localIp = null)
+        public string ProxyName { get; set; }
+
+        public UdpProxy(string proxyName)
+        {
+            this.ProxyName = proxyName;
+        }
+
+        public async Task Start(string remoteServerHostNameOrAddress, ushort remoteServerPort, ushort localPort, string? localIp = null, CancellationToken? cT = null)
         {
             var connections = new ConcurrentDictionary<IPEndPoint, UdpConnection>();
 
@@ -28,19 +35,36 @@ namespace PortProxy
             IPAddress localIpAddress = string.IsNullOrEmpty(localIp) ? IPAddress.IPv6Any : IPAddress.Parse(localIp);
             localServer.Client.Bind(new IPEndPoint(localIpAddress, localPort));
 
+            cT?.Register(() =>
+            {
+                try { localServer.Close(); } catch { }
+            });
             Console.WriteLine($"UDP proxy started [{localIpAddress}]:{localPort} -> [{remoteServerHostNameOrAddress}]:{remoteServerPort}");
 
             var _ = Task.Run(async () =>
             {
+                var aC = Cache.ActiveSession.Find(X => X.ProxyName == ProxyName);
+
+                if (aC != null)
+                {
+                    aC.TcpClients.Clear();
+                }
+
                 while (true)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
                     foreach (var connection in connections.ToArray())
                     {
+
                         if (connection.Value.LastActivity + ConnectionTimeout < Environment.TickCount64)
                         {
                             connections.TryRemove(connection.Key, out UdpConnection? c);
                             connection.Value.Stop();
+                        }
+
+                        if (aC != null)
+                        {
+                            aC.TcpClients.Add(connection.Value.ClientIP);
                         }
                     }
                     ///
@@ -61,7 +85,7 @@ namespace PortProxy
                             return udpConnection;
                         });
                     await client.SendToServerAsync(message.Buffer).ConfigureAwait(false);
-                   
+
                 }
                 catch (Exception ex)
                 {
@@ -85,6 +109,7 @@ namespace PortProxy
         private long _totalBytesForwarded;
         private long _totalBytesResponded;
         private readonly TaskCompletionSource<bool> _forwardConnectionBindCompleted = new TaskCompletionSource<bool>();
+        public string ClientIP { get; set; } = "";
 
         public UdpConnection(UdpClient localServer, IPEndPoint sourceEndpoint, IPEndPoint remoteEndpoint)
         {
@@ -97,6 +122,7 @@ namespace PortProxy
 
             _forwardClient = new UdpClient(AddressFamily.InterNetworkV6);
             _forwardClient.Client.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+            
         }
 
         public async Task SendToServerAsync(byte[] message)
@@ -118,7 +144,7 @@ namespace PortProxy
                     _forwardLocalEndpoint = _forwardClient.Client.LocalEndPoint;
                     _forwardConnectionBindCompleted.SetResult(true);
                     Console.WriteLine($"Established UDP {_sourceEndpoint} => {_serverLocalEndpoint} => {_forwardLocalEndpoint} => {_remoteEndpoint}");
-
+                    ClientIP = $"{_sourceEndpoint} => {_serverLocalEndpoint}";
                     while (_isRunning)
                     {
                         try

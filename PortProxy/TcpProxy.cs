@@ -18,7 +18,13 @@ namespace PortProxy
         /// </summary>
         public int ConnectionTimeout { get; set; } = (4 * 60 * 1000);
 
-        public async Task Start(string remoteServerHostNameOrAddress, ushort remoteServerPort, ushort localPort, string? localIp)
+        public string ProxyName { get; set; }
+        public TcpProxy(string proxyName)
+        {
+            ProxyName = proxyName;
+        }
+
+        public async Task Start(string remoteServerHostNameOrAddress, ushort remoteServerPort, ushort localPort, string? localIp, CancellationToken? cT)
         {
             var connections = new ConcurrentBag<TcpConnection>();
 
@@ -26,7 +32,10 @@ namespace PortProxy
             var localServer = new TcpListener(new IPEndPoint(localIpAddress, localPort));
             localServer.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             localServer.Start();
-
+            cT?.Register(() =>
+            {
+                try { localServer.Stop(); } catch { }
+            });
             Console.WriteLine($"TCP proxy started [{localIpAddress}]:{localPort} -> [{remoteServerHostNameOrAddress}]:{remoteServerPort}");
 
             var _ = Task.Run(async () =>
@@ -39,8 +48,15 @@ namespace PortProxy
                     while (connections.TryTake(out var connection))
                     {
                         tempConnections.Add(connection);
+                        //
+
                     }
 
+                    var aC = Cache.ActiveSession.Find(X => X.ProxyName == ProxyName);
+                    if (aC != null)
+                    {
+                        aC.TcpClients.Clear();
+                    }
                     foreach (var tcpConnection in tempConnections)
                     {
                         if (tcpConnection.LastActivity + ConnectionTimeout < Environment.TickCount64)
@@ -50,6 +66,13 @@ namespace PortProxy
                         else
                         {
                             connections.Add(tcpConnection);
+                        }
+
+                        /// Setting List of active clients in Cache
+                        if (aC != null)
+                        {
+                            aC.TcpClients.Clear();
+                            aC.TcpClients.Add(tcpConnection.ClientIP);
                         }
                     }
                 }
@@ -75,12 +98,14 @@ namespace PortProxy
                 }
             }
         }
+
+
     }
 
     internal class TcpConnection
     {
         private readonly TcpClient _localServerConnection;
-        private readonly EndPoint? _sourceEndpoint;
+        public readonly EndPoint? _sourceEndpoint;
         private readonly IPEndPoint _remoteEndpoint;
         private readonly TcpClient _forwardClient;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -89,7 +114,7 @@ namespace PortProxy
         private long _totalBytesForwarded;
         private long _totalBytesResponded;
         public long LastActivity { get; private set; } = Environment.TickCount64;
-
+        public string ClientIP { get; set; } = "";
         public static async Task<TcpConnection> AcceptTcpClientAsync(TcpListener tcpListener, IPEndPoint remoteEndpoint)
         {
             var localServerConnection = await tcpListener.AcceptTcpClientAsync().ConfigureAwait(false);
@@ -102,10 +127,11 @@ namespace PortProxy
             _localServerConnection = localServerConnection;
             _remoteEndpoint = remoteEndpoint;
 
-            _forwardClient = new TcpClient {NoDelay = true};
+            _forwardClient = new TcpClient { NoDelay = true };
 
             _sourceEndpoint = _localServerConnection.Client.RemoteEndPoint;
             _serverLocalEndpoint = _localServerConnection.Client.LocalEndPoint;
+            
         }
 
         public void Run()
@@ -134,11 +160,14 @@ namespace PortProxy
                     using (_localServerConnection)
                     using (_forwardClient)
                     {
+
+
+
                         await _forwardClient.ConnectAsync(_remoteEndpoint.Address, _remoteEndpoint.Port, cancellationToken).ConfigureAwait(false);
                         _forwardLocalEndpoint = _forwardClient.Client.LocalEndPoint;
 
                         Console.WriteLine($"Established TCP {_sourceEndpoint} => {_serverLocalEndpoint} => {_forwardLocalEndpoint} => {_remoteEndpoint}");
-
+                        ClientIP = $"{_sourceEndpoint}:{_serverLocalEndpoint}";
                         using (var serverStream = _forwardClient.GetStream())
                         using (var clientStream = _localServerConnection.GetStream())
                         using (cancellationToken.Register(() =>
@@ -147,6 +176,7 @@ namespace PortProxy
                             clientStream.Close();
                         }, true))
                         {
+
                             await Task.WhenAny(
                                 CopyToAsync(clientStream, serverStream, 81920, Direction.Forward, cancellationToken),
                                 CopyToAsync(serverStream, clientStream, 81920, Direction.Responding, cancellationToken)

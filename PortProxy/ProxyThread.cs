@@ -8,47 +8,33 @@ namespace PortProxy
 {
 
 
-    public static class ProxyThreads
+    public class ProxyThread
     {
-        public static Dictionary<string, Thread> ProxyTaskThreads { get; set; } = new Dictionary<string, Thread>();
+        string ProxyName { get; set; }
+        ProxyConfig ProxyConfig { get; set; }
+        CancellationTokenSource tokenSource2 = new CancellationTokenSource();
 
-        public static Dictionary<string, List<string>> ActiveLinks { get; set; } = new Dictionary<string, List<string>>();
 
-        public static Thread ProxyThread(string proxyName, ProxyConfig proxyConfig)
+        public ProxyThread(string proxyName, ProxyConfig proxyConfig)
         {
-
-            Thread PThread = new Thread(new ThreadStart(delegate
-            {
-                Task.WhenAll(StartProxy(proxyName, proxyConfig)).Wait();
-            }));
-            PThread.IsBackground = true;
-            ProxyTaskThreads.Add(proxyName, PThread);
-            return PThread;
+            ProxyName = proxyName;
+            ProxyConfig = proxyConfig;
+            ProxyTasks = GetProxyTasks();
         }
 
-        public static void StopProxyThread(string proxyName)
+        public IEnumerable<Task> ProxyTasks { get; set; }
+
+        public IEnumerable<Task> GetProxyTasks()
         {
 
-            try
-            {
-                StopProxy(proxyName);
-                ProxyTaskThreads[proxyName].Abort();
-            }
-            catch { };
-            ProxyTaskThreads.Remove(proxyName);
-        }
-
-        public static Dictionary<string, IEnumerable<Task>> ProxyTasks { get; set; } = new Dictionary<string, IEnumerable<Task>>();
-        public static IEnumerable<Task> StartProxy(string proxyName, ProxyConfig proxyConfig)
-        {
-
-            var forwardPort = proxyConfig.forwardPort;
-            var localPort = proxyConfig.localPort;
-            var forwardIp = proxyConfig.forwardIp;
-            var localIp = proxyConfig.localIp;
-            var protocol = proxyConfig.protocol;
+            CancellationToken ct = tokenSource2.Token;
+            //
+            var forwardPort = ProxyConfig.forwardPort;
+            var localPort = ProxyConfig.localPort;
+            var forwardIp = ProxyConfig.forwardIp;
+            var localIp = ProxyConfig.localIp;
+            var protocol = ProxyConfig.protocol;
             Console.WriteLine($"{protocol} @ {localIp}:{localPort} to {forwardIp}:{forwardPort}");
-            ActiveLinks.Add(proxyName, new List<string> { $"{protocol} @ {localIp}:{localPort} to {forwardIp}:{forwardPort}" });
             try
             {
                 if (forwardIp == null)
@@ -70,7 +56,7 @@ namespace PortProxy
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to start {proxyName} : {ex.Message}");
+                Console.WriteLine($"Failed to start {ProxyName} : {ex.Message}");
                 throw;
             }
 
@@ -81,15 +67,14 @@ namespace PortProxy
                 Task task;
                 try
                 {
-                    var proxy = new UdpProxy();
-                    task = proxy.Start(forwardIp, forwardPort.Value, localPort.Value, localIp);
+                    var proxy = new UdpProxy(ProxyName);
+                    task = proxy.Start(forwardIp, forwardPort.Value, localPort.Value, localIp, ct);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to start {proxyName} : {ex.Message}");
+                    Console.WriteLine($"Failed to start {ProxyName} : {ex.Message}");
                     throw;
                 }
-
                 yield return task;
             }
 
@@ -99,13 +84,13 @@ namespace PortProxy
                 Task task;
                 try
                 {
-                    var proxy = new TcpProxy();
-                    task = proxy.Start(forwardIp, forwardPort.Value, localPort.Value, localIp);
+                    var proxy = new TcpProxy(ProxyName);
+                    task = proxy.Start(forwardIp, forwardPort.Value, localPort.Value, localIp, ct);
 
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to start {proxyName} : {ex.Message}");
+                    Console.WriteLine($"Failed to start {ProxyName} : {ex.Message}");
                     throw;
                 }
 
@@ -119,24 +104,22 @@ namespace PortProxy
 
         }
 
-        public static string StopProxy(string proxyName)
+        public void StartProxy()
         {
-            ActiveLinks.Remove(proxyName);
+            new Thread(new ThreadStart(delegate
+            {
+                Task.WhenAll(ProxyTasks).Wait();
+            })).Start();
+        }
 
-            IEnumerable<Task>? ProxyTask;
-            if (ProxyTasks.TryGetValue(proxyName, out ProxyTask) == true)
+
+        public void Stop()
+        {
+            tokenSource2.Cancel();
+            Task.Run(() =>
             {
-                ProxyTask.ToList().ForEach(X =>
-                {
-                    try { X.Dispose(); } catch { }
-                });
-                ProxyTasks.Remove(proxyName);
-                return $"Proxy killed : {proxyName}";
-            }
-            else
-            {
-                return "No executing proxy found";
-            }
+                Cache.ActiveSession.RemoveAll(X => X.ProxyName == ProxyName);
+            });
         }
     }
 }
