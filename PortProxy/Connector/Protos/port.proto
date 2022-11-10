@@ -10,6 +10,7 @@ service PPConnector {
   rpc SayHello (HelloRequest) returns (Reply);
 
   rpc AddPort(PortRequest) returns (Reply);
+
 }
 
 // The request message containing the user's name.

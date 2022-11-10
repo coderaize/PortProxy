@@ -22,9 +22,10 @@ namespace PortProxy.WinService
                                builder
                                    .ConfigureKestrel(options =>
                                    {
-                                       options.ListenAnyIP(0, listenOptions =>
-                                       {
+                                       options.ListenAnyIP(5000, listenOptions =>
+                                       {                                           
                                            listenOptions.Protocols = HttpProtocols.Http2;
+                                           listenOptions.UseHttps();                                           
                                        });
                                    })
                                    .UseKestrel()

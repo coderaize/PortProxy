@@ -15,8 +15,7 @@ namespace PortProxy.WinService
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGrpcService<PortProxy.Connector.Services.PortService>();
-                
+                endpoints.MapGrpcService<PortProxy.Connector.Services.PortService>();                
             });
         }
     }

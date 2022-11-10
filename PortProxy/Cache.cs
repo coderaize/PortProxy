@@ -9,11 +9,9 @@ namespace PortProxy
 {
     public static class Cache
     {
-
         public static Configs Configs = new Configs();
 
         public static List<ActiveSession> ActiveSession = new List<ActiveSession>();
-
     }
 
 

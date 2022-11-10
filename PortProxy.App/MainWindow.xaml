@@ -5,8 +5,110 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PortProxy.App"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" WindowStyle="ThreeDBorderWindow">
-    <Grid>
-       
+        Title="MainWindow" Height="700" Width="600" WindowStyle="None" MouseDown="Window_MouseDown">
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"></RowDefinition>
+            <RowDefinition Height="5*"></RowDefinition>
+
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="50"></ColumnDefinition>
+                <ColumnDefinition Width="1*"></ColumnDefinition>
+                <ColumnDefinition Width="20"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Image Grid.Column="0" Source="/Resources/server.png" Stretch="Uniform" Margin="2"></Image>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="15"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <Label Grid.Row="0" Margin="0" Padding="0" FontSize="25" FontWeight="Bold">Port Proxy</Label>
+                <Label Grid.Row="1" Margin="0" Padding="1" FontSize="9">Map your sockets for another server</Label>
+            </Grid>
+            <Button x:Name="button_ExitApp" Grid.Column="2"  Padding="0" FontFamily="{StaticResource FontAwesome}" Foreground="#FF2C3E50" 
+                    Content="&#xf011;" Background="{x:Null}" BorderBrush="{x:Null}"  Margin="0,0,0,30" Click="button_ExitApp_Click">
+                <Button.ContentTemplate>
+                    <DataTemplate>
+                        <TextBlock FontFamily="{StaticResource FontAwesome}"  Text="&#xf011;"  FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" Padding="0" Height="20">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <Trigger Property ="IsMouseOver" Value="True">
+                                            <Setter Property= "Background" Value="White"></Setter>
+
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </DataTemplate>
+                </Button.ContentTemplate>
+
+            </Button>
+        </Grid>
+        <Grid Grid.Row="1">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal" x:Name="serviceInstallerBox">
+                    <TextBlock  x:Name="label_ServiceHeader" Margin="5">Install Service On This Machine</TextBlock>
+                    <!--<Canvas Width="20px"></Canvas>-->
+                    <Button x:Name="btn_InstallService" Content="Click Here" Margin="21,3,3,3" FontSize="12" Style="{StaticResource CustomButtonStyle}" Width="60" Click="btn_InstallService_Click"/>
+                </StackPanel>
+                <Border x:Name="srv_OptionsBox" Margin="20,0,10,0" BorderBrush="#FFD7D4D4" Background="#FFD4D2D2" CornerRadius="5" Padding="5">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Service Options</TextBlock>
+                        <Button Margin="2" IsEnabled="False" Width="60" Style= "{StaticResource CustomButtonStyle}">Start</Button>
+                        <Button Margin="2"  IsEnabled="False"  Width="60" Style="{StaticResource CustomButtonStyle}">Stop</Button>
+                        <Button Margin="2" IsEnabled="False"  Width="60" Style="{StaticResource CustomButtonStyle}">Restart</Button>
+                    </StackPanel>
+                </Border>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock  Margin="5">Service EndPoint</TextBlock>
+                    <Button x:Name="btn_configureService" Content="Configure"  Margin="3" FontSize="12" Style="{StaticResource CustomButtonStyle}" Width="60" Click="btn_configureService_Click"/>
+                </StackPanel>
+                <Border x:Name="ServiceConfigureBox" Margin=" 20 0 10 0" Padding="10" BorderBrush="#FF757575" Background="#FFE3E3E3" CornerRadius="5,5,5,5" Visibility="Collapsed">
+                    <StackPanel Orientation="Vertical" >
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Left"  FontSize="12" Margin="2">Serice Url</TextBlock>
+                            <TextBox x:Name="TextBox_ServiceUrl" DockPanel.Dock="Right" Margin="5 0 0 0" KeyDown="TextBox_ServiceUrl_KeyDown" ></TextBox>
+                        </DockPanel>
+                        <Border Height="2"></Border>
+                        <ProgressBar Height="8" Orientation="Horizontal"></ProgressBar>
+                        <Border Height="1"></Border>
+                        <DataGrid x:Name="activePortsGrid" FontSize="12" >
+                            <DataGrid.Columns >
+                                <DataGridTextColumn Width="130" Header="Name"/>
+                                <DataGridTextColumn Width="80" Header="Local Port"/>
+                                <DataGridTextColumn Width="100" Header="Remote IP"/>
+                                <DataGridTextColumn Width="80" Header="Remote Port"/>
+                                <DataGridTextColumn Width="80" Header="Type"/>
+                                <DataGridHyperlinkColumn Header="Remove"/>
+                            </DataGrid.Columns>
+
+                        </DataGrid>
+                        <StackPanel Orientation="Vertical" Background="#FFC8C8C8">
+                            <StackPanel  Orientation="Horizontal">
+                                <TextBlock Margin="5" FontSize="10">Local Port</TextBlock>
+                                <TextBox x:Name="txt_srv_LocalPort" Margin="0,3,0,3" FontSize="10" Width="40"/>
+                                <TextBlock Margin="5" FontSize="10">Remote IP / Port</TextBlock>
+                                <TextBox x:Name="txt_srv_RemoteIP" Margin="0,3,0,3" FontSize="10" Width="70"/>
+                                <TextBox x:Name="txt_srv_RemotePort" Margin="0.1,3,0,3" FontSize="10" Width="40"/>
+                                <TextBlock Margin="5" FontSize="10">Type</TextBlock>
+                                <ComboBox x:Name="txt_srv_ConnectionType" Width="80" FontSize="10" Height="18px" IsReadOnly="True" >
+                                    <ComboBoxItem Name="Anu">Any</ComboBoxItem>
+                                    <ComboBoxItem Name="Tcp">Tcp</ComboBoxItem>
+                                    <ComboBoxItem Name="Udp">Udp</ComboBoxItem>
+                                </ComboBox>
+                                <Button x:Name="button_srv_AddPort" Margin="5" FontSize="10"  Width="45" Style="{StaticResource CustomButtonStyle}" Content="Add" Click="button_srv_AddPort_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+
+        </Grid>
     </Grid>
 </Window>
